@@ -1,0 +1,146 @@
+.shop-screen {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+}
+
+.shop-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 2px solid #ffd700;
+}
+
+.shop-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.shop-gold {
+  font-size: 1.3rem;
+  color: #ffd700;
+}
+
+.shop-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.shop-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.shop-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+}
+
+.shop-item .item-emoji {
+  font-size: 2.5rem;
+}
+
+.item-info {
+  flex: 1;
+}
+
+.item-info .item-name {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+}
+
+.item-info .item-desc {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.buy-btn {
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  border: none;
+  border-radius: 25px;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.buy-btn:disabled {
+  background: #555;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.buy-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+}
+
+.shop-inventory {
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 15px;
+}
+
+.shop-inventory h4 {
+  margin: 0 0 1rem 0;
+  color: #ccc;
+}
+
+.inventory-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.inventory-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.8rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.inv-emoji {
+  font-size: 1.2rem;
+}
+
+.inv-name {
+  font-size: 0.9rem;
+}
+
+.inv-count {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.shop-close {
+  margin: 1rem 2rem 2rem;
+  padding: 1rem;
+  font-size: 1.1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.shop-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}

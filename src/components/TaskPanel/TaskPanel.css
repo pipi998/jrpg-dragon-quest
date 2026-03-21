@@ -1,0 +1,107 @@
+.task-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.task-panel {
+  width: 90%;
+  max-width: 450px;
+  max-height: 70vh;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 20px;
+  border: 2px solid #ff9800;
+  overflow: hidden;
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 152, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 152, 0, 0.3);
+}
+
+.task-header h2 {
+  margin: 0;
+  color: #ff9800;
+}
+
+.close-btn {
+  width: 30px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+}
+
+.task-content {
+  padding: 1rem;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.task-section {
+  margin-bottom: 1.5rem;
+}
+
+.task-section h4 {
+  margin: 0 0 0.8rem 0;
+  color: #ccc;
+  font-size: 0.9rem;
+}
+
+.no-task {
+  color: #666;
+  font-style: italic;
+  text-align: center;
+  padding: 1rem;
+}
+
+.task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+}
+
+.task-item.active {
+  border-left: 3px solid #ff9800;
+}
+
+.task-item.completed {
+  opacity: 0.7;
+}
+
+.task-icon {
+  font-size: 1.5rem;
+}
+
+.task-name {
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 0.3rem;
+}
+
+.task-desc {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.completed-list {
+  max-height: 200px;
+  overflow-y: auto;
+}

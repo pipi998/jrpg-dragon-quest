@@ -1,0 +1,246 @@
+.battle-screen {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #2c1810 0%, #1a0f0a 100%);
+  color: #fff;
+}
+
+.battle-header {
+  padding: 1rem;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 2px solid #8b4513;
+}
+
+.battle-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.battle-arena {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2rem;
+}
+
+.enemy-side, .player-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 15px;
+  transition: all 0.3s;
+}
+
+.enemy-side.defeated {
+  opacity: 0.5;
+  filter: grayscale(1);
+}
+
+.player-side.dead {
+  opacity: 0.5;
+}
+
+.enemy-emoji, .player-emoji {
+  font-size: 4rem;
+  animation: float 2s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.enemy-name, .player-name {
+  font-size: 1.5rem;
+  margin: 0.5rem 0;
+  font-weight: bold;
+}
+
+.enemy-hp, .player-hp {
+  width: 200px;
+  height: 25px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+.hp-bar {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.enemy-hp-bar {
+  background: linear-gradient(90deg, #ff4444, #ff6666);
+}
+
+.player-hp-bar {
+  background: linear-gradient(90deg, #44ff44, #66ff66);
+}
+
+.hp-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.85rem;
+  font-weight: bold;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.boss-label {
+  margin-top: 0.5rem;
+  padding: 0.3rem 1rem;
+  background: #9c27b0;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.player-skills {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.skill-badge {
+  font-size: 1.2rem;
+  padding: 0.2rem;
+  background: rgba(255, 215, 0, 0.2);
+  border-radius: 5px;
+  cursor: help;
+}
+
+.battle-logs {
+  flex: 1;
+  max-height: 150px;
+  overflow-y: auto;
+  margin: 0 2rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+  border: 1px solid #8b4513;
+}
+
+.log-line {
+  padding: 0.3rem 0;
+  font-size: 0.95rem;
+  color: #ccc;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.log-line:last-child {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.battle-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.action-btn {
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 100px;
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-btn.attack {
+  background: linear-gradient(135deg, #e94560, #c73e54);
+  color: #fff;
+}
+
+.action-btn.rest {
+  background: linear-gradient(135deg, #4CAF50, #388E3C);
+  color: #fff;
+}
+
+.action-btn.potion {
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+  color: #fff;
+}
+
+.action-btn.escape {
+  background: linear-gradient(135deg, #757575, #616161);
+  color: #fff;
+}
+
+.action-btn:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.battle-end {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  padding: 2rem 3rem;
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 20px;
+  border: 2px solid #ffd700;
+}
+
+.victory {
+  font-size: 2rem;
+  color: #ffd700;
+  margin-bottom: 1rem;
+}
+
+.defeat {
+  font-size: 2rem;
+  color: #ff4444;
+  margin-bottom: 1rem;
+}
+
+.escaped {
+  font-size: 1.5rem;
+  color: #aaa;
+  margin-bottom: 1rem;
+}
+
+.continue-btn {
+  padding: 0.8rem 2rem;
+  font-size: 1.2rem;
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  border: none;
+  border-radius: 25px;
+  color: #000;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.continue-btn:hover {
+  transform: scale(1.05);
+}

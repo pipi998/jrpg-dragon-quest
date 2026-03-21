@@ -1,0 +1,67 @@
+.start-screen {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: #fff;
+}
+
+.start-content {
+  text-align: center;
+}
+
+.game-title {
+  font-size: 3.5rem;
+  margin: 0 0 0.5rem 0;
+  background: linear-gradient(45deg, #ffd700, #ff8c00, #ffd700);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+  }
+  to {
+    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8));
+  }
+}
+
+.game-subtitle {
+  font-size: 1.2rem;
+  color: #888;
+  margin: 0 0 3rem 0;
+  letter-spacing: 0.3em;
+}
+
+.start-button {
+  padding: 1rem 3rem;
+  font-size: 1.5rem;
+  background: linear-gradient(45deg, #e94560, #c73e54);
+  border: none;
+  border-radius: 50px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+}
+
+.start-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 25px rgba(233, 69, 96, 0.6);
+}
+
+.start-button:active {
+  transform: translateY(0);
+}
+
+.version {
+  margin-top: 3rem;
+  font-size: 0.8rem;
+  color: #555;
+}

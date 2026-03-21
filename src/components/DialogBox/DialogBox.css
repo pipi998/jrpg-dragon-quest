@@ -1,0 +1,70 @@
+.dialog-overlay {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 900;
+  display: flex;
+  justify-content: center;
+}
+
+.dialog-box {
+  width: 100%;
+  max-width: 700px;
+  background: linear-gradient(180deg, #2a2a4a 0%, #1a1a2e 100%);
+  border-radius: 15px;
+  border: 2px solid #ffd700;
+  padding: 1.2rem;
+  cursor: pointer;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.dialog-speaker {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.speaker-emoji {
+  font-size: 2rem;
+}
+
+.speaker-name {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #ffd700;
+}
+
+.dialog-content {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #fff;
+  min-height: 50px;
+  margin-bottom: 0.8rem;
+}
+
+.dialog-hint {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #888;
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
