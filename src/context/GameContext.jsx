@@ -164,20 +164,16 @@ function gameReducer(state, action) {
               items: newItems
             };
             
-            // 显示对话
-            if (node.dialogue?.intro) {
-              newState.dialog = { 
-                messages: node.dialogue.intro,
-                onComplete: null
-              };
-              newState.screen = SCREENS.DIALOG;
-              return newState;
-            } else {
-              newState.notifications = [{
-                id: Date.now(),
-                message: `获得 ${reward.gold || 0} 金币${reward.items ? ` 和 ${reward.items.potion || 0} 药水` : ''}`
-              }];
-            }
+            // 显示宝箱奖励弹窗
+            newState.taskReward = {
+              taskName: `💎 宝箱：${node.name}`,
+              rewards: {
+                gold: reward.gold || 0,
+                items: { potion: reward.items?.potion || 0 }
+              }
+            };
+            newState.screen = SCREENS.TASK_REWARD;
+            return newState;
           } else {
             // 宝箱已领取，提示
             newState.notifications = [{

@@ -14,13 +14,15 @@ export default function MapScreen() {
     // 只能移动到相邻节点或已访问过的节点
     const isAdjacent = currentNode.unlocks.includes(nodeId);
     const isVisited = map.visitedNodes.includes(nodeId);
+    const isUnlocked = map.unlockedNodes.includes(nodeId);
     
-    if (!isAdjacent && !isVisited) {
+    // 允许访问：相邻节点 OR 已访问节点 OR 已解锁节点
+    if (!isAdjacent && !isVisited && !isUnlocked) {
       return;
     }
     
     // 宝箱已领取时仍然可以访问（只是不会获得奖励）
-    if (map.unlockedNodes.includes(nodeId)) {
+    if (isUnlocked) {
       dispatch({ type: 'MOVE_TO_NODE', payload: { nodeId } });
     }
   };
@@ -41,13 +43,12 @@ export default function MapScreen() {
     const currentNode = NODES.find(n => n.id === map.currentNode);
     if (!currentNode) return false;
     
-    // 可访问条件（满足任一即可）：
-    // 1. 相邻节点（在当前节点的unlocks中）
-    // 2. 已访问过的节点（允许走回头路）
     const isAdjacent = currentNode.unlocks.includes(nodeId);
     const isVisited = map.visitedNodes.includes(nodeId);
+    const isUnlocked = map.unlockedNodes.includes(nodeId);
     
-    return (isAdjacent || isVisited) && map.unlockedNodes.includes(nodeId);
+    // 允许访问：相邻节点 OR 已访问节点 OR 已解锁节点
+    return (isAdjacent || isVisited || isUnlocked) && map.unlockedNodes.includes(nodeId);
   };
   
   const isVisited = (nodeId) => {
