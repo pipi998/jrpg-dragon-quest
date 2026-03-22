@@ -557,7 +557,8 @@ function gameReducer(state, action) {
         newPlayer.hp = state.player.hp + 15;
       }
       
-      return { ...state, player: newPlayer };
+      // 保持状态面板打开
+      return { ...state, player: newPlayer, statusPanel: true };
     }
     
     case 'BUY_ITEM': {
