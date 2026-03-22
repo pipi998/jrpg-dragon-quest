@@ -7,18 +7,19 @@ export default function MapScreen() {
   const { map, player, tasks } = state;
   
   const handleNodeClick = (nodeId) => {
-    // 检查是否是相邻节点
+    // 检查是否是相邻节点或已访问过的节点（允许回头路）
     const currentNode = NODES.find(n => n.id === map.currentNode);
     if (!currentNode) return;
     
-    // 只能移动到相邻节点（当前节点解锁的节点）
-    if (!currentNode.unlocks.includes(nodeId)) {
+    // 只能移动到相邻节点或已访问过的节点
+    const isAdjacent = currentNode.unlocks.includes(nodeId);
+    const isVisited = map.visitedNodes.includes(nodeId);
+    
+    if (!isAdjacent && !isVisited) {
       return;
     }
     
     // 宝箱已领取时仍然可以访问（只是不会获得奖励）
-    // 不再阻止移动
-    
     if (map.unlockedNodes.includes(nodeId)) {
       dispatch({ type: 'MOVE_TO_NODE', payload: { nodeId } });
     }
@@ -39,8 +40,14 @@ export default function MapScreen() {
   const isReachable = (nodeId) => {
     const currentNode = NODES.find(n => n.id === map.currentNode);
     if (!currentNode) return false;
-    // 只能移动到当前节点解锁的节点（支持重复访问）
-    return currentNode.unlocks.includes(nodeId) && map.unlockedNodes.includes(nodeId);
+    
+    // 可访问条件（满足任一即可）：
+    // 1. 相邻节点（在当前节点的unlocks中）
+    // 2. 已访问过的节点（允许走回头路）
+    const isAdjacent = currentNode.unlocks.includes(nodeId);
+    const isVisited = map.visitedNodes.includes(nodeId);
+    
+    return (isAdjacent || isVisited) && map.unlockedNodes.includes(nodeId);
   };
   
   const isVisited = (nodeId) => {
