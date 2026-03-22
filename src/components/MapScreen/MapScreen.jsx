@@ -7,22 +7,24 @@ export default function MapScreen() {
   const { map, player, tasks } = state;
   
   const handleNodeClick = (nodeId) => {
-    // 检查是否是相邻节点或已访问过的节点（允许回头路）
-    const currentNode = NODES.find(n => n.id === map.currentNode);
+    const currentNodeId = map.currentNode;
+    const currentNode = NODES.find(n => n.id === currentNodeId);
     if (!currentNode) return;
     
-    // 只能移动到相邻节点或已访问过的节点
+    // 检查是否可以访问该节点
+    // 可访问条件：
+    // 1. 相邻节点（在当前节点的unlocks中）
+    // 2. 当前节点在目标节点的unlocks中（目标节点是当前节点的前置节点，可以走回头路）
+    // 3. 已解锁的节点
     const isAdjacent = currentNode.unlocks.includes(nodeId);
-    const isVisited = map.visitedNodes.includes(nodeId);
+    const isPreviousNode = NODES.some(n => n.id === nodeId && n.unlocks.includes(currentNodeId));
     const isUnlocked = map.unlockedNodes.includes(nodeId);
     
-    // 允许访问：相邻节点 OR 已访问节点 OR 已解锁节点
-    if (!isAdjacent && !isVisited && !isUnlocked) {
+    if (!isAdjacent && !isPreviousNode && !isUnlocked) {
       return;
     }
     
-    // 宝箱已领取时仍然可以访问（只是不会获得奖励）
-    if (isUnlocked) {
+    if (isUnlocked || isAdjacent || isPreviousNode) {
       dispatch({ type: 'MOVE_TO_NODE', payload: { nodeId } });
     }
   };
@@ -40,15 +42,16 @@ export default function MapScreen() {
   };
   
   const isReachable = (nodeId) => {
-    const currentNode = NODES.find(n => n.id === map.currentNode);
+    const currentNodeId = map.currentNode;
+    const currentNode = NODES.find(n => n.id === currentNodeId);
     if (!currentNode) return false;
     
     const isAdjacent = currentNode.unlocks.includes(nodeId);
-    const isVisited = map.visitedNodes.includes(nodeId);
+    const isPreviousNode = NODES.some(n => n.id === nodeId && n.unlocks.includes(currentNodeId));
     const isUnlocked = map.unlockedNodes.includes(nodeId);
     
-    // 允许访问：相邻节点 OR 已访问节点 OR 已解锁节点
-    return (isAdjacent || isVisited || isUnlocked) && map.unlockedNodes.includes(nodeId);
+    // 允许访问：相邻节点 OR 前置节点（可回头路）OR 已解锁节点
+    return (isAdjacent || isPreviousNode || isUnlocked) && map.unlockedNodes.includes(nodeId);
   };
   
   const isVisited = (nodeId) => {
