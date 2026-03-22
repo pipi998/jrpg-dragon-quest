@@ -222,8 +222,7 @@ function gameReducer(state, action) {
           logs.push('💀 战斗失败！你被送回了村庄...');
         }
         
-        newBattle.turn = 'enemy';
-      } else if (!battleFinished && !escaped) {
+        // 敌人攻击后切换回玩家回合
         newBattle.turn = 'player';
       }
       
