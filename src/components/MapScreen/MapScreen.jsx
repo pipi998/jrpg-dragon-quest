@@ -16,13 +16,8 @@ export default function MapScreen() {
       return;
     }
     
-    // 检查是否已领取宝箱
-    if (map.collectedChests.includes(nodeId)) {
-      const node = NODES.find(n => n.id === nodeId);
-      if (node?.type === 'chest') {
-        return;  // 宝箱已领取，不能再移动
-      }
-    }
+    // 宝箱已领取时仍然可以访问（只是不会获得奖励）
+    // 不再阻止移动
     
     if (map.unlockedNodes.includes(nodeId)) {
       dispatch({ type: 'MOVE_TO_NODE', payload: { nodeId } });
@@ -44,14 +39,17 @@ export default function MapScreen() {
   const isReachable = (nodeId) => {
     const currentNode = NODES.find(n => n.id === map.currentNode);
     if (!currentNode) return false;
-    // 只能移动到当前节点解锁的节点，且不能是已访问过的节点（回头路）
-    return currentNode.unlocks.includes(nodeId) && 
-           map.unlockedNodes.includes(nodeId) && 
-           !map.visitedNodes.includes(nodeId);
+    // 只能移动到当前节点解锁的节点（支持重复访问）
+    return currentNode.unlocks.includes(nodeId) && map.unlockedNodes.includes(nodeId);
   };
   
   const isVisited = (nodeId) => {
     return map.visitedNodes.includes(nodeId);
+  };
+  
+  const isChestCollected = (nodeId) => {
+    const node = NODES.find(n => n.id === nodeId);
+    return node?.type === 'chest' && map.collectedChests.includes(nodeId);
   };
   
   const isCurrentNode = (nodeId) => {

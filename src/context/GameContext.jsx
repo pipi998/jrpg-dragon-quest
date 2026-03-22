@@ -74,16 +74,13 @@ function gameReducer(state, action) {
         return state;  // 不能移动到非相邻节点
       }
       
-      // 检查是否走回头路（已访问过的节点不能再去）
-      if (state.map.visitedNodes.includes(nodeId)) {
-        return state;  // 不能走回头路
-      }
+      // 检查宝箱是否已领取（宝箱只能领取一次）
+      const isChestCollected = node?.type === 'chest' && state.map.collectedChests.includes(nodeId);
       
-      // 检查宝箱是否已领取
-      if (node?.type === 'chest' && state.map.collectedChests.includes(nodeId)) {
-        return state;  // 宝箱已领取
-      }
+      // 检查任务是否已完成
+      const isTaskCompleted = node?.taskId && state.tasks.completed.includes(node.taskId);
       
+      // 计算新解锁的节点（只对未访问节点）
       const newUnlocked = [...new Set([...state.map.unlockedNodes, ...(node?.unlocks || [])])];
       
       // 触发节点事件
@@ -93,7 +90,7 @@ function gameReducer(state, action) {
           currentNode: nodeId,
           unlockedNodes: newUnlocked,
           visitedNodes: [...new Set([...state.map.visitedNodes, nodeId])],
-          collectedChests: [...state.map.collectedChests]
+          collectedChests: isChestCollected ? state.map.collectedChests : [...state.map.collectedChests]
         },
         statusPanel: false,
         taskPanel: false
@@ -101,15 +98,26 @@ function gameReducer(state, action) {
       
       // 根据节点类型触发不同事件
       if (node) {
-        // 检查是否有任务
-        if (node.taskId) {
-          const task = TASKS[node.taskId];
-          if (task && !state.tasks.completed.includes(node.taskId)) {
-            newState.tasks.active = { ...task, nodeId };
+        // 任务节点 - 只有未完成时才发布任务
+        if (node.type === 'task') {
+          if (node.taskId && !isTaskCompleted) {
+            const task = TASKS[node.taskId];
+            if (task) {
+              newState.tasks.active = { ...task, nodeId };
+            }
+          }
+          // 显示对话
+          if (node.dialogue?.intro) {
+            newState.dialog = { 
+              messages: node.dialogue.intro,
+              onComplete: null
+            };
+            newState.screen = SCREENS.DIALOG;
+            return newState;
           }
         }
         
-        // 战斗节点 - 先显示对话再进入战斗
+        // 战斗/任务战斗/BOSS节点 - 总是触发战斗
         if (node.type === 'battle' || node.type === 'battle_boss' || node.type === 'task_battle') {
           // 如果有对话，先显示对话
           if (node.dialogue?.intro) {
@@ -134,14 +142,97 @@ function gameReducer(state, action) {
             nodeId
           };
           newState.screen = SCREENS.BATTLE;
+          return newState;
         }
         
-        // 宝箱节点 - 记录已领取
+        // 宝箱节点 - 只有未领取时才发放奖励
         if (node.type === 'chest') {
-          // 标记宝箱为已领取
-          newState.map.collectedChests = [...state.map.collectedChests, nodeId];
-          
-          const reward = node.reward || { gold: 30 };
+          if (!isChestCollected) {
+            // 标记宝箱为已领取
+            newState.map.collectedChests = [...state.map.collectedChests, nodeId];
+            
+            const reward = node.reward || { gold: 30 };
+            const newItems = { ...state.player.items };
+            if (reward.items) {
+              Object.keys(reward.items).forEach(itemId => {
+                newItems[itemId] = (newItems[itemId] || 0) + reward.items[itemId];
+              });
+            }
+            newState.player = {
+              ...state.player,
+              gold: state.player.gold + (reward.gold || 0),
+              items: newItems
+            };
+            
+            // 显示对话
+            if (node.dialogue?.intro) {
+              newState.dialog = { 
+                messages: node.dialogue.intro,
+                onComplete: null
+              };
+              newState.screen = SCREENS.DIALOG;
+              return newState;
+            } else {
+              newState.notifications = [{
+                id: Date.now(),
+                message: `获得 ${reward.gold || 0} 金币${reward.items ? ` 和 ${reward.items.potion || 0} 药水` : ''}`
+              }];
+            }
+          } else {
+            // 宝箱已领取，提示
+            newState.notifications = [{
+              id: Date.now(),
+              message: '宝箱已经领取过了'
+            }];
+          }
+        }
+        
+        // 休息节点 - 总是恢复体力
+        if (node.type === 'rest') {
+          // 先显示对话
+          if (node.dialogue?.intro) {
+            newState.dialog = { 
+              messages: node.dialogue.intro,
+              onComplete: {
+                type: 'REST',
+                nodeId: node.id
+              }
+            };
+            newState.screen = SCREENS.DIALOG;
+            return newState;
+          }
+          // 没有对话直接休息
+          newState.player = {
+            ...state.player,
+            hp: state.player.maxHp
+          };
+          newState.notifications = [{
+            id: Date.now(),
+            message: '体力已恢复！'
+          }];
+        }
+        
+        // 商店节点 - 总是打开商店
+        if (node.type === 'shop') {
+          // 先显示对话
+          if (node.dialogue?.intro) {
+            newState.dialog = { 
+              messages: node.dialogue.intro,
+              onComplete: {
+                type: 'OPEN_SHOP',
+                nodeId: node.id
+              }
+            };
+            newState.screen = SCREENS.DIALOG;
+          } else {
+            newState.shop = { nodeId };
+            newState.screen = SCREENS.SHOP;
+          }
+        }
+      }
+      
+      return newState;
+    }
           const newItems = { ...state.player.items };
           if (reward.items) {
             Object.keys(reward.items).forEach(itemId => {
