@@ -293,7 +293,11 @@ function gameReducer(state, action) {
       if (!battle || battle.turn !== 'player') return state;
       
       const player = state.player;
-      let newBattle = { ...battle };
+      let newBattle = { 
+        ...battle,
+        enemy: { ...battle.enemy },
+        logs: [...battle.logs]
+      };
       let newPlayer = { ...player, items: { ...player.items } };
       let logs = [...battle.logs];
       let battleFinished = false;
