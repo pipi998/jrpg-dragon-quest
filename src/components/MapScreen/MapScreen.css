@@ -138,6 +138,14 @@
   filter: grayscale(0.3);
 }
 
+.map-node.visited {
+  opacity: 0.5;
+}
+
+.map-node.visited .node-emoji {
+  filter: grayscale(0.5);
+}
+
 .map-node.locked {
   opacity: 0.4;
   cursor: not-allowed;

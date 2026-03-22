@@ -44,8 +44,14 @@ export default function MapScreen() {
   const isReachable = (nodeId) => {
     const currentNode = NODES.find(n => n.id === map.currentNode);
     if (!currentNode) return false;
-    // 只能移动到当前节点解锁的节点
-    return currentNode.unlocks.includes(nodeId) && map.unlockedNodes.includes(nodeId);
+    // 只能移动到当前节点解锁的节点，且不能是已访问过的节点（回头路）
+    return currentNode.unlocks.includes(nodeId) && 
+           map.unlockedNodes.includes(nodeId) && 
+           !map.visitedNodes.includes(nodeId);
+  };
+  
+  const isVisited = (nodeId) => {
+    return map.visitedNodes.includes(nodeId);
   };
   
   const isCurrentNode = (nodeId) => {
@@ -101,7 +107,7 @@ export default function MapScreen() {
         {NODES.map(node => (
           <div
             key={node.id}
-            className={`map-node ${isCurrentNode(node.id) ? 'current' : ''} ${isReachable(node.id) ? 'reachable' : ''} ${map.unlockedNodes.includes(node.id) && !isReachable(node.id) ? 'unlocked' : 'locked'}`}
+            className={`map-node ${isCurrentNode(node.id) ? 'current' : ''} ${isReachable(node.id) ? 'reachable' : ''} ${isVisited(node.id) && !isCurrentNode(node.id) ? 'visited' : ''} ${map.unlockedNodes.includes(node.id) && !isReachable(node.id) && !isVisited(node.id) ? 'unlocked' : ''} ${!map.unlockedNodes.includes(node.id) ? 'locked' : ''}`}
             style={{ left: node.position.x, top: node.position.y }}
             onClick={() => handleNodeClick(node.id)}
           >

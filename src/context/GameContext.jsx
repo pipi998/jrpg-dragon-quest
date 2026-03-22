@@ -74,6 +74,11 @@ function gameReducer(state, action) {
         return state;  // 不能移动到非相邻节点
       }
       
+      // 检查是否走回头路（已访问过的节点不能再去）
+      if (state.map.visitedNodes.includes(nodeId)) {
+        return state;  // 不能走回头路
+      }
+      
       // 检查宝箱是否已领取
       if (node?.type === 'chest' && state.map.collectedChests.includes(nodeId)) {
         return state;  // 宝箱已领取
@@ -540,7 +545,8 @@ function gameReducer(state, action) {
         newPlayer.hp = state.player.hp + 15;
       }
       
-      return { ...state, player: newPlayer };
+      // 保持状态面板打开
+      return { ...state, player: newPlayer, statusPanel: true };
     }
     
     case 'BUY_ITEM': {
