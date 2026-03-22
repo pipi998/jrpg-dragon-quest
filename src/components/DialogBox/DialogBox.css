@@ -1,24 +1,26 @@
 .dialog-overlay {
   position: fixed;
-  bottom: 0;
+  top: 0;
   left: 0;
-  width: 100%;
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 900;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 2500;
   display: flex;
+  align-items: center;
   justify-content: center;
 }
 
 .dialog-box {
-  width: 100%;
+  width: 90%;
   max-width: 700px;
   background: linear-gradient(180deg, #2a2a4a 0%, #1a1a2e 100%);
   border-radius: 15px;
   border: 2px solid #ffd700;
-  padding: 1.2rem;
+  padding: 1.5rem;
   cursor: pointer;
   animation: slideUp 0.3s ease;
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
 }
 
 @keyframes slideUp {

@@ -89,7 +89,9 @@ function gameReducer(state, action) {
           unlockedNodes: newUnlocked,
           visitedNodes: [...new Set([...state.map.visitedNodes, nodeId])],
           collectedChests: [...state.map.collectedChests]
-        }
+        },
+        statusPanel: false,
+        taskPanel: false
       };
       
       // 根据节点类型触发不同事件
@@ -563,7 +565,9 @@ function gameReducer(state, action) {
       return {
         ...state,
         screen: SCREENS.DIALOG,
-        dialog: action.payload
+        dialog: action.payload,
+        statusPanel: false,
+        taskPanel: false
       };
     }
     
