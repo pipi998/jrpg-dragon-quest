@@ -7,6 +7,7 @@ import ShopScreen from './components/ShopScreen/ShopScreen';
 import StatusPanel from './components/StatusPanel/StatusPanel';
 import TaskPanel from './components/TaskPanel/TaskPanel';
 import DialogBox from './components/DialogBox/DialogBox';
+import TaskReward from './components/TaskReward/TaskReward';
 import './App.css';
 
 function Game() {
@@ -33,6 +34,10 @@ function Game() {
         return <BattleScreen />;
       case SCREENS.SHOP:
         return <ShopScreen />;
+      case SCREENS.DIALOG:
+        return <MapScreen />;
+      case SCREENS.TASK_REWARD:
+        return <MapScreen />;
       default:
         return <StartScreen />;
     }
@@ -44,6 +49,7 @@ function Game() {
       <StatusPanel />
       <TaskPanel />
       <DialogBox />
+      <TaskReward />
       
       {/* 通知 */}
       <div className="notifications">

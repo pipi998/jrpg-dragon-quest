@@ -7,25 +7,57 @@ export default function MapScreen() {
   const { map, player, tasks } = state;
   
   const handleNodeClick = (nodeId) => {
+    // 检查是否是相邻节点
+    const currentNode = NODES.find(n => n.id === map.currentNode);
+    if (!currentNode) return;
+    
+    // 只能移动到相邻节点（当前节点解锁的节点）
+    if (!currentNode.unlocks.includes(nodeId)) {
+      return;
+    }
+    
+    // 检查是否已领取宝箱
+    if (map.collectedChests.includes(nodeId)) {
+      const node = NODES.find(n => n.id === nodeId);
+      if (node?.type === 'chest') {
+        return;  // 宝箱已领取，不能再移动
+      }
+    }
+    
     if (map.unlockedNodes.includes(nodeId)) {
       dispatch({ type: 'MOVE_TO_NODE', payload: { nodeId } });
     }
   };
   
   const getNodeEmoji = (node) => {
+    // 未解锁
     if (!map.unlockedNodes.includes(node.id)) {
       return '🔒';
+    }
+    // 宝箱已领取
+    if (node.type === 'chest' && map.collectedChests.includes(node.id)) {
+      return '📦';
     }
     return node.emoji;
   };
   
   const isReachable = (nodeId) => {
-    return map.unlockedNodes.includes(nodeId);
+    const currentNode = NODES.find(n => n.id === map.currentNode);
+    if (!currentNode) return false;
+    // 只能移动到当前节点解锁的节点
+    return currentNode.unlocks.includes(nodeId) && map.unlockedNodes.includes(nodeId);
+  };
+  
+  const isCurrentNode = (nodeId) => {
+    return map.currentNode === nodeId;
   };
   
   const hasActiveTask = () => {
     return tasks.active !== null;
   };
+  
+  const currentNode = NODES.find(n => n.id === map.currentNode);
+  const reachableCount = currentNode ? currentNode.unlocks.filter(id => map.unlockedNodes.includes(id)).length : 0;
   
   return (
     <div className="map-screen">
@@ -47,7 +79,7 @@ export default function MapScreen() {
       </div>
       
       <div className="map-container">
-        <svg className="map-lines" width="1800" height="500">
+        <svg className="map-lines" width="2600" height="500">
           {NODES.map(node => 
             node.unlocks.map(targetId => {
               const target = NODES.find(n => n.id === targetId);
@@ -69,7 +101,7 @@ export default function MapScreen() {
         {NODES.map(node => (
           <div
             key={node.id}
-            className={`map-node ${map.currentNode === node.id ? 'current' : ''} ${isReachable(node.id) ? 'reachable' : 'locked'}`}
+            className={`map-node ${isCurrentNode(node.id) ? 'current' : ''} ${isReachable(node.id) ? 'reachable' : ''} ${map.unlockedNodes.includes(node.id) && !isReachable(node.id) ? 'unlocked' : 'locked'}`}
             style={{ left: node.position.x, top: node.position.y }}
             onClick={() => handleNodeClick(node.id)}
           >
@@ -84,7 +116,7 @@ export default function MapScreen() {
       </div>
       
       <div className="map-footer">
-        <p>点击节点移动 · 已解锁 {map.unlockedNodes.length}/20 个节点</p>
+        <p>点击可移动节点移动 · 已解锁 {map.unlockedNodes.length}/40 个节点</p>
       </div>
     </div>
   );

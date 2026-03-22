@@ -12,8 +12,12 @@ export const SCREENS = {
   MAP: 'map',
   BATTLE: 'battle',
   SHOP: 'shop',
-  DIALOG: 'dialog'
+  DIALOG: 'dialog',
+  TASK_REWARD: 'task_reward'  // 新增：任务奖励弹窗
 };
+
+// 任务奖励弹窗组件数据
+let TaskRewardPopup = null;
 
 // 初始状态
 const initialState = {
@@ -22,7 +26,8 @@ const initialState = {
   map: {
     currentNode: 0,
     unlockedNodes: [0],
-    visitedNodes: [0]
+    visitedNodes: [0],      // 已访问节点（用于宝箱）
+    collectedChests: []     // 已领取的宝箱
   },
   battle: null,
   dialog: null,
@@ -33,7 +38,8 @@ const initialState = {
     active: null,
     completed: []
   },
-  notifications: []
+  notifications: [],
+  taskReward: null  // 任务奖励数据
 };
 
 // 游戏Reducer
@@ -47,14 +53,28 @@ function gameReducer(state, action) {
         map: {
           currentNode: 0,
           unlockedNodes: [0],
-          visitedNodes: [0]
+          visitedNodes: [0],
+          collectedChests: []
         },
         tasks: { active: null, completed: [] }
       };
     
+    // 节点移动
     case 'MOVE_TO_NODE': {
       const { nodeId } = action.payload;
       const node = NODES.find(n => n.id === nodeId);
+      const currentNode = NODES.find(n => n.id === state.map.currentNode);
+      
+      // 检查是否只能移动1个节点（相邻节点）
+      if (currentNode && !currentNode.unlocks.includes(nodeId)) {
+        return state;  // 不能移动到非相邻节点
+      }
+      
+      // 检查宝箱是否已领取
+      if (node?.type === 'chest' && state.map.collectedChests.includes(nodeId)) {
+        return state;  // 宝箱已领取
+      }
+      
       const newUnlocked = [...new Set([...state.map.unlockedNodes, ...(node?.unlocks || [])])];
       
       // 触发节点事件
@@ -63,7 +83,8 @@ function gameReducer(state, action) {
         map: {
           currentNode: nodeId,
           unlockedNodes: newUnlocked,
-          visitedNodes: [...new Set([...state.map.visitedNodes, nodeId])]
+          visitedNodes: [...new Set([...state.map.visitedNodes, nodeId])],
+          collectedChests: [...state.map.collectedChests]
         }
       };
       
@@ -77,8 +98,22 @@ function gameReducer(state, action) {
           }
         }
         
-        // 战斗节点
+        // 战斗节点 - 先显示对话再进入战斗
         if (node.type === 'battle' || node.type === 'battle_boss' || node.type === 'task_battle') {
+          // 如果有对话，先显示对话
+          if (node.dialogue?.intro) {
+            newState.dialog = { 
+              messages: node.dialogue.intro,
+              onComplete: {
+                type: 'START_BATTLE',
+                nodeId: node.id,
+                enemyId: node.enemyId
+              }
+            };
+            newState.screen = SCREENS.DIALOG;
+            return newState;
+          }
+          // 没有对话直接进入战斗
           newState.battle = {
             enemy: { ...ENEMIES[node.enemyId] },
             playerHp: state.player.hp,
@@ -90,8 +125,11 @@ function gameReducer(state, action) {
           newState.screen = SCREENS.BATTLE;
         }
         
-        // 宝箱节点
+        // 宝箱节点 - 记录已领取
         if (node.type === 'chest') {
+          // 标记宝箱为已领取
+          newState.map.collectedChests = [...state.map.collectedChests, nodeId];
+          
           const reward = node.reward || { gold: 30 };
           const newItems = { ...state.player.items };
           if (reward.items) {
@@ -104,14 +142,37 @@ function gameReducer(state, action) {
             gold: state.player.gold + (reward.gold || 0),
             items: newItems
           };
-          newState.notifications = [{
-            id: Date.now(),
-            message: `获得 ${reward.gold || 0} 金币${reward.items ? ` 和 ${reward.items.potion || 0} 药水` : ''}`
-          }];
+          
+          // 显示对话
+          if (node.dialogue?.intro) {
+            newState.dialog = { 
+              messages: node.dialogue.intro,
+              onComplete: null
+            };
+            newState.screen = SCREENS.DIALOG;
+          } else {
+            newState.notifications = [{
+              id: Date.now(),
+              message: `获得 ${reward.gold || 0} 金币${reward.items ? ` 和 ${reward.items.potion || 0} 药水` : ''}`
+            }];
+          }
         }
         
         // 休息节点
         if (node.type === 'rest') {
+          // 先显示对话
+          if (node.dialogue?.intro) {
+            newState.dialog = { 
+              messages: node.dialogue.intro,
+              onComplete: {
+                type: 'REST',
+                nodeId: node.id
+              }
+            };
+            newState.screen = SCREENS.DIALOG;
+            return newState;
+          }
+          // 没有对话直接休息
           newState.player = {
             ...state.player,
             hp: state.player.maxHp
@@ -124,12 +185,83 @@ function gameReducer(state, action) {
         
         // 商店节点
         if (node.type === 'shop') {
-          newState.shop = { nodeId };
-          newState.screen = SCREENS.SHOP;
+          // 先显示对话
+          if (node.dialogue?.intro) {
+            newState.dialog = { 
+              messages: node.dialogue.intro,
+              onComplete: {
+                type: 'OPEN_SHOP',
+                nodeId: node.id
+              }
+            };
+            newState.screen = SCREENS.DIALOG;
+          } else {
+            newState.shop = { nodeId };
+            newState.screen = SCREENS.SHOP;
+          }
+        }
+        
+        // 任务节点
+        if (node.type === 'task') {
+          // 先显示对话
+          if (node.dialogue?.intro) {
+            newState.dialog = { 
+              messages: node.dialogue.intro,
+              onComplete: null
+            };
+            newState.screen = SCREENS.DIALOG;
+          }
         }
       }
       
       return newState;
+    }
+    
+    // 开始战斗（对话完成后调用）
+    case 'START_BATTLE': {
+      const { nodeId, enemyId } = action.payload;
+      const enemy = ENEMIES[enemyId];
+      
+      return {
+        ...state,
+        screen: SCREENS.BATTLE,
+        battle: {
+          enemy: { ...enemy },
+          playerHp: state.player.hp,
+          turn: 'player',
+          logs: [`遭遇 ${enemy.name}！`],
+          escaped: false,
+          nodeId
+        },
+        dialog: null
+      };
+    }
+    
+    // 休息（对话完成后调用）
+    case 'REST': {
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          hp: state.player.maxHp
+        },
+        notifications: [{
+          id: Date.now(),
+          message: '体力已恢复！'
+        }],
+        dialog: null
+      };
+    }
+    
+    // 打开商店（对话完成后调用）
+    case 'OPEN_SHOP': {
+      const { nodeId } = action.payload;
+      return {
+        ...state,
+        shop: { nodeId },
+        screen: SCREENS.SHOP,
+        dialog: null
+      };
     }
     
     case 'BATTLE_ACTION': {
@@ -143,6 +275,7 @@ function gameReducer(state, action) {
       let logs = [...battle.logs];
       let battleFinished = false;
       let escaped = false;
+      let showVictoryDialog = false;
       
       switch (battleAction) {
         case 'attack': {
@@ -154,6 +287,13 @@ function gameReducer(state, action) {
             battleFinished = true;
             logs.push(`🎉 胜利！获得 ${battle.enemy.gold} 金币！`);
             newPlayer.gold = player.gold + battle.enemy.gold;
+            
+            // 检查是否有胜利对话
+            const currentNode = NODES.find(n => n.id === battle.nodeId);
+            if (currentNode?.dialogue?.victory) {
+              showVictoryDialog = true;
+            }
+            
             // 检查升级
             const newExp = player.exp + battle.enemy.gold;
             const expNeeded = getExpForLevel(player.level);
@@ -229,6 +369,17 @@ function gameReducer(state, action) {
       newBattle.playerHp = newPlayer.hp;
       newBattle.logs = logs;
       
+      // 如果有胜利对话，延迟处理
+      if (showVictoryDialog) {
+        return {
+          ...state,
+          battle: newBattle,
+          player: newPlayer,
+          battleFinished: true,
+          escaped
+        };
+      }
+      
       return {
         ...state,
         battle: newBattle,
@@ -239,6 +390,23 @@ function gameReducer(state, action) {
     }
     
     case 'END_BATTLE': {
+      const currentNode = NODES.find(n => n.id === state.map.currentNode);
+      
+      // 检查是否有胜利对话需要显示
+      if (currentNode?.dialogue?.victory && state.battle?.enemy?.hp <= 0) {
+        return {
+          ...state,
+          dialog: {
+            messages: currentNode.dialogue.victory,
+            onComplete: {
+              type: 'BATTLE_VICTORY_COMPLETE'
+            }
+          },
+          screen: SCREENS.DIALOG,
+          battle: null
+        };
+      }
+      
       if (state.battle?.playerHp <= 0) {
         // 战斗失败，回满血
         return {
@@ -277,11 +445,57 @@ function gameReducer(state, action) {
             active: null,
             completed: [...state.tasks.completed, activeTask.id]
           };
-          newState.notifications = [{
-            id: Date.now(),
-            message: `任务完成！获得 ${rewards.gold} 金币和 ${rewards.items.potion} 药水！`
-          }];
+          // 显示任务奖励弹窗
+          newState.taskReward = {
+            taskName: activeTask.name,
+            rewards: rewards
+          };
+          newState.screen = SCREENS.TASK_REWARD;
         }
+      }
+      
+      // 解锁下一个节点
+      if (currentNode?.unlocks?.length > 0) {
+        newState.map = {
+          ...state.map,
+          unlockedNodes: [...new Set([...state.map.unlockedNodes, ...currentNode.unlocks])]
+        };
+      }
+      
+      return newState;
+    }
+    
+    // 战斗胜利对话完成后
+    case 'BATTLE_VICTORY_COMPLETE': {
+      let newState = {
+        ...state,
+        screen: SCREENS.MAP,
+        dialog: null
+      };
+      
+      // 完成任务
+      const activeTask = state.tasks.active;
+      if (activeTask) {
+        const rewards = calculateTaskReward(activeTask, state.player.level);
+        newState.player = {
+          ...state.player,
+          gold: state.player.gold + rewards.gold,
+          items: {
+            ...state.player.items,
+            potion: (state.player.items.potion || 0) + (rewards.items.potion || 0)
+          }
+        };
+        newState.tasks = {
+          ...state.tasks,
+          active: null,
+          completed: [...state.tasks.completed, activeTask.id]
+        };
+        // 显示任务奖励弹窗
+        newState.taskReward = {
+          taskName: activeTask.name,
+          rewards: rewards
+        };
+        newState.screen = SCREENS.TASK_REWARD;
       }
       
       // 解锁下一个节点
@@ -294,6 +508,15 @@ function gameReducer(state, action) {
       }
       
       return newState;
+    }
+    
+    // 关闭任务奖励弹窗
+    case 'CLOSE_TASK_REWARD': {
+      return {
+        ...state,
+        screen: SCREENS.MAP,
+        taskReward: null
+      };
     }
     
     case 'UPGRADE_ATTRIBUTE': {
@@ -341,6 +564,35 @@ function gameReducer(state, action) {
     }
     
     case 'CLOSE_DIALOG': {
+      const dialog = state.dialog;
+      
+      // 如果有回调，执行回调
+      if (dialog?.onComplete) {
+        const { type } = dialog.onComplete;
+        
+        if (type === 'START_BATTLE') {
+          return gameReducer(state, { 
+            type: 'START_BATTLE', 
+            payload: { 
+              nodeId: dialog.onComplete.nodeId, 
+              enemyId: dialog.onComplete.enemyId 
+            } 
+          });
+        }
+        if (type === 'REST') {
+          return gameReducer(state, { 
+            type: 'REST', 
+            payload: { nodeId: dialog.onComplete.nodeId } 
+          });
+        }
+        if (type === 'OPEN_SHOP') {
+          return gameReducer(state, { 
+            type: 'OPEN_SHOP', 
+            payload: { nodeId: dialog.onComplete.nodeId } 
+          });
+        }
+      }
+      
       return {
         ...state,
         screen: state.battle ? SCREENS.BATTLE : SCREENS.MAP,
