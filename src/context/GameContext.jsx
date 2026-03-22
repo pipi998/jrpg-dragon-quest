@@ -69,13 +69,18 @@ function gameReducer(state, action) {
       const node = NODES.find(n => n.id === nodeId);
       const currentNode = NODES.find(n => n.id === state.map.currentNode);
       
-      // 检查是否只能移动1个节点（相邻节点或前置节点）
+      // 检查是否只能移动1个节点
+      // 允许移动：相邻节点（unlocks包含）OR 前置节点（回头路）
       const isAdjacent = currentNode && currentNode.unlocks.includes(nodeId);
       const isPreviousNode = NODES.some(n => n.id === nodeId && n.unlocks.includes(state.map.currentNode));
-      const isUnlocked = state.map.unlockedNodes.includes(nodeId);
       
-      // 允许移动：相邻节点 OR 前置节点（可回头路）OR 已解锁节点
-      if (!isAdjacent && !isPreviousNode && !isUnlocked) {
+      // 只能移动到相邻节点或前置节点（每次1步）
+      if (!isAdjacent && !isPreviousNode) {
+        return state;
+      }
+      
+      // 必须已解锁
+      if (!state.map.unlockedNodes.includes(nodeId)) {
         return state;
       }
       

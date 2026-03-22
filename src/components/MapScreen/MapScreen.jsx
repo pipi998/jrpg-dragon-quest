@@ -12,21 +12,16 @@ export default function MapScreen() {
     if (!currentNode) return;
     
     // 检查是否可以访问该节点
-    // 可访问条件：
-    // 1. 相邻节点（在当前节点的unlocks中）
-    // 2. 当前节点在目标节点的unlocks中（目标节点是当前节点的前置节点，可以走回头路）
-    // 3. 已解锁的节点
+    // 只能移动到：相邻节点 OR 前置节点（回头路），且必须已解锁
     const isAdjacent = currentNode.unlocks.includes(nodeId);
     const isPreviousNode = NODES.some(n => n.id === nodeId && n.unlocks.includes(currentNodeId));
     const isUnlocked = map.unlockedNodes.includes(nodeId);
     
-    if (!isAdjacent && !isPreviousNode && !isUnlocked) {
-      return;
-    }
+    // 每次只能移动1个节点：相邻或前置，且必须已解锁
+    if (!isUnlocked) return;
+    if (!isAdjacent && !isPreviousNode) return;
     
-    if (isUnlocked || isAdjacent || isPreviousNode) {
-      dispatch({ type: 'MOVE_TO_NODE', payload: { nodeId } });
-    }
+    dispatch({ type: 'MOVE_TO_NODE', payload: { nodeId } });
   };
   
   const getNodeEmoji = (node) => {
@@ -50,8 +45,8 @@ export default function MapScreen() {
     const isPreviousNode = NODES.some(n => n.id === nodeId && n.unlocks.includes(currentNodeId));
     const isUnlocked = map.unlockedNodes.includes(nodeId);
     
-    // 允许访问：相邻节点 OR 前置节点（可回头路）OR 已解锁节点
-    return (isAdjacent || isPreviousNode || isUnlocked) && map.unlockedNodes.includes(nodeId);
+    // 每次只能移动1步：相邻或前置，且必须已解锁
+    return isUnlocked && (isAdjacent || isPreviousNode);
   };
   
   const isVisited = (nodeId) => {
