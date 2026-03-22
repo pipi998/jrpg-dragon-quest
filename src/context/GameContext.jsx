@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { INITIAL_PLAYER, calculateLevelStats, getExpForLevel, MAX_LEVEL, calculateDamage, tryEscape } from '../systems/battle';
+import { INITIAL_PLAYER, calculateLevelStats, getExpForLevel, MAX_LEVEL, calculateDamage, tryEscape, getUpgradeCost } from '../systems/battle';
 import { NODES, NODE_TYPES } from '../data/maps';
 import { ENEMIES } from '../data/enemies';
 import { TASKS, calculateTaskReward } from '../data/tasks';
