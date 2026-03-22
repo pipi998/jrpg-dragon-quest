@@ -80,7 +80,7 @@ function gameReducer(state, action) {
       // 检查任务是否已完成
       const isTaskCompleted = node?.taskId && state.tasks.completed.includes(node.taskId);
       
-      // 计算新解锁的节点（只对未访问节点）
+      // 计算新解锁的节点
       const newUnlocked = [...new Set([...state.map.unlockedNodes, ...(node?.unlocks || [])])];
       
       // 触发节点事件
@@ -90,7 +90,7 @@ function gameReducer(state, action) {
           currentNode: nodeId,
           unlockedNodes: newUnlocked,
           visitedNodes: [...new Set([...state.map.visitedNodes, nodeId])],
-          collectedChests: isChestCollected ? state.map.collectedChests : [...state.map.collectedChests]
+          collectedChests: [...state.map.collectedChests]
         },
         statusPanel: false,
         taskPanel: false
@@ -227,91 +227,6 @@ function gameReducer(state, action) {
           } else {
             newState.shop = { nodeId };
             newState.screen = SCREENS.SHOP;
-          }
-        }
-      }
-      
-      return newState;
-    }
-          const newItems = { ...state.player.items };
-          if (reward.items) {
-            Object.keys(reward.items).forEach(itemId => {
-              newItems[itemId] = (newItems[itemId] || 0) + reward.items[itemId];
-            });
-          }
-          newState.player = {
-            ...state.player,
-            gold: state.player.gold + (reward.gold || 0),
-            items: newItems
-          };
-          
-          // 显示对话
-          if (node.dialogue?.intro) {
-            newState.dialog = { 
-              messages: node.dialogue.intro,
-              onComplete: null
-            };
-            newState.screen = SCREENS.DIALOG;
-          } else {
-            newState.notifications = [{
-              id: Date.now(),
-              message: `获得 ${reward.gold || 0} 金币${reward.items ? ` 和 ${reward.items.potion || 0} 药水` : ''}`
-            }];
-          }
-        }
-        
-        // 休息节点
-        if (node.type === 'rest') {
-          // 先显示对话
-          if (node.dialogue?.intro) {
-            newState.dialog = { 
-              messages: node.dialogue.intro,
-              onComplete: {
-                type: 'REST',
-                nodeId: node.id
-              }
-            };
-            newState.screen = SCREENS.DIALOG;
-            return newState;
-          }
-          // 没有对话直接休息
-          newState.player = {
-            ...state.player,
-            hp: state.player.maxHp
-          };
-          newState.notifications = [{
-            id: Date.now(),
-            message: '体力已恢复！'
-          }];
-        }
-        
-        // 商店节点
-        if (node.type === 'shop') {
-          // 先显示对话
-          if (node.dialogue?.intro) {
-            newState.dialog = { 
-              messages: node.dialogue.intro,
-              onComplete: {
-                type: 'OPEN_SHOP',
-                nodeId: node.id
-              }
-            };
-            newState.screen = SCREENS.DIALOG;
-          } else {
-            newState.shop = { nodeId };
-            newState.screen = SCREENS.SHOP;
-          }
-        }
-        
-        // 任务节点
-        if (node.type === 'task') {
-          // 先显示对话
-          if (node.dialogue?.intro) {
-            newState.dialog = { 
-              messages: node.dialogue.intro,
-              onComplete: null
-            };
-            newState.screen = SCREENS.DIALOG;
           }
         }
       }
@@ -636,8 +551,7 @@ function gameReducer(state, action) {
         newPlayer.hp = state.player.hp + 15;
       }
       
-      // 保持状态面板打开
-      return { ...state, player: newPlayer, statusPanel: true };
+      return { ...state, player: newPlayer };
     }
     
     case 'BUY_ITEM': {
