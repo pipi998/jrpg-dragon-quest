@@ -46,13 +46,17 @@ const initialState = {
 function gameReducer(state, action) {
   switch (action.type) {
     case 'START_GAME':
+      // 初始解锁节点0的相邻节点
+      const startNode = NODES.find(n => n.id === 0);
+      const initialUnlocked = startNode ? [0, ...startNode.unlocks] : [0];
+      
       return {
         ...state,
         screen: SCREENS.MAP,
         player: { ...INITIAL_PLAYER },
         map: {
           currentNode: 0,
-          unlockedNodes: [0],
+          unlockedNodes: initialUnlocked,
           visitedNodes: [0],
           collectedChests: []
         },
