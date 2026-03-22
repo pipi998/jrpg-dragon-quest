@@ -294,7 +294,7 @@ function gameReducer(state, action) {
       
       const player = state.player;
       let newBattle = { ...battle };
-      let newPlayer = { ...player };
+      let newPlayer = { ...player, items: { ...player.items } };
       let logs = [...battle.logs];
       let battleFinished = false;
       let escaped = false;
