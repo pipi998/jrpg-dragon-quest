@@ -54,13 +54,15 @@ export const NODES = [
     id: 3,
     name: "小溪边",
     emoji: "🏞️",
-    type: "rest",
+    type: "task",
     description: "清澈的小溪，休息的好地方",
     position: { x: 280, y: 100 },
     unlocks: [5],
+    taskId: "explore_forest",
     dialogue: {
       intro: [
-        { speaker: "💧 溪水", text: "清澈的溪水让人心旷神怡。" }
+        { speaker: "💧 溪水", text: "清澈的溪水让人心旷神怡。" },
+        { speaker: "👴 老猎人", text: "年轻人，前面的森林里有不少野兽出没，能帮我清理一下吗？" }
       ]
     }
   },
@@ -146,14 +148,16 @@ export const NODES = [
     id: 9,
     name: "精灵之泉",
     emoji: "💧",
-    type: "rest",
+    type: "task",
     description: "恢复体力，精灵居住地",
     position: { x: 620, y: 320 },
     unlocks: [10, 11],
+    taskId: "protect_fairy",
     dialogue: {
       intro: [
         { speaker: "🧚 精灵", text: "你拥有光之神的祝福..." },
-        { speaker: "💧 精灵之泉", text: "温暖的泉水治愈着你的身心。" }
+        { speaker: "💧 精灵之泉", text: "温暖的泉水治愈着你的身心。" },
+        { speaker: "🧚 精灵", text: "最近有一些山猫袭击我们的领地，请求你帮我们赶走它们！" }
       ]
     }
   },
@@ -278,13 +282,15 @@ export const NODES = [
     id: 17,
     name: "山间平台",
     emoji: "🗻",
-    type: "rest",
+    type: "task",
     description: "可以俯瞰整个山脉",
     position: { x: 1180, y: 180 },
     unlocks: [18, 19],
+    taskId: "clear_cave",
     dialogue: {
       intro: [
-        { speaker: "💨 山风", text: "呼啸的风声仿佛在诉说着古老的传说..." }
+        { speaker: "💨 山风", text: "呼啸的风声仿佛在诉说着古老的传说..." },
+        { speaker: "🧔 探险家", text: "前方的隐蔽山洞里据说有宝藏，但被怪物占据了..." }
       ]
     }
   },
@@ -492,7 +498,7 @@ export const NODES = [
     type: "chest",
     description: "邪恶的仪式遗迹",
     position: { x: 1980, y: 150 },
-    unlocks: [],
+    unlocks: [32],
     reward: { gold: 150, items: { potion: 2 } },
     dialogue: {
       intro: [

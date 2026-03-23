@@ -4,7 +4,7 @@ import { NODES, NODE_TYPES } from '../data/maps';
 import { ENEMIES } from '../data/enemies';
 import { TASKS, calculateTaskReward } from '../data/tasks';
 import { getItem } from '../data/items';
-import { getSkillForLevel } from '../data/skills';
+import { getSkillForLevel, SKILLS } from '../data/skills';
 
 // 游戏屏幕
 export const SCREENS = {
@@ -249,12 +249,13 @@ function gameReducer(state, action) {
         ...state,
         screen: SCREENS.BATTLE,
         battle: {
-          enemy: { ...enemy },
+          enemy: { ...enemy, maxHp: enemy.hp },
           playerHp: state.player.hp,
           turn: 'player',
           logs: [`遭遇 ${enemy.name}！`],
           escaped: false,
-          nodeId
+          nodeId,
+          skillUses: {}
         },
         dialog: null
       };
@@ -376,10 +377,92 @@ function gameReducer(state, action) {
           }
           break;
         }
+        
+        case 'use_skill': {
+          const { skillId } = action.payload;
+          const skill = SKILLS[skillId];
+          if (!skill) break;
+          
+          const currentUses = (battle.skillUses && battle.skillUses[skillId]) || 0;
+          if (currentUses >= 3) {
+            logs.push(`❌ ${skill.name} 本场战斗已使用3次，无法继续使用！`);
+            break;
+          }
+          
+          newBattle.skillUses = { ...(battle.skillUses || {}), [skillId]: currentUses + 1 };
+          
+          switch (skill.type) {
+            case 'heal': {
+              const healAmount = Math.floor(player.maxHp * skill.effect.healPercent);
+              newPlayer.hp = Math.min(player.maxHp, player.hp + healAmount);
+              logs.push(`✨ 使用了 ${skill.name}，恢复了 ${healAmount} 点体力！`);
+              break;
+            }
+            case 'buff': {
+              if (skill.effect.damageReduction) {
+                newBattle.playerBuffs = { ...(battle.playerBuffs || {}), damageReduction: skill.effect.damageReduction };
+                logs.push(`✨ 使用了 ${skill.name}，${skill.description}`);
+              }
+              if (skill.effect.attackBoost) {
+                newBattle.playerBuffs = { ...(battle.playerBuffs || {}), attackBoost: skill.effect.attackBoost };
+                logs.push(`✨ 使用了 ${skill.name}，${skill.description}`);
+              }
+              break;
+            }
+            case 'regen': {
+              newBattle.playerBuffs = { ...(battle.playerBuffs || {}), regen: skill.effect.regenPercent, regenTurns: skill.duration };
+              logs.push(`✨ 使用了 ${skill.name}，${skill.description}`);
+              break;
+            }
+            case 'desperate': {
+              newBattle.playerBuffs = { 
+                ...(battle.playerBuffs || {}), 
+                desperateFirst: true,
+                desperateDebuff: true
+              };
+              logs.push(`✨ 使用了 ${skill.name}，${skill.description}`);
+              break;
+            }
+            default:
+              logs.push(`✨ 使用了 ${skill.name}！`);
+          }
+          
+          logs.push(`📊 ${skill.name} 本场战斗已使用 ${currentUses + 1}/3 次`);
+          break;
+        }
       }
       
       // 敌人回合
       if (!battleFinished && !escaped && newBattle.turn === 'player') {
+        // 应用持续恢复效果
+        if (newBattle.playerBuffs?.regen) {
+          const regenAmount = Math.floor(player.maxHp * newBattle.playerBuffs.regen);
+          newPlayer.hp = Math.min(player.maxHp, player.hp + regenAmount);
+          logs.push(`💚 持续恢复效果恢复了 ${regenAmount} 点体力！`);
+          
+          if (newBattle.playerBuffs.regenTurns > 1) {
+            newBattle.playerBuffs = { 
+              ...newBattle.playerBuffs, 
+              regenTurns: newBattle.playerBuffs.regenTurns - 1 
+            };
+          } else {
+            newBattle.playerBuffs = { 
+              ...newBattle.playerBuffs, 
+              regen: null,
+              regenTurns: 0
+            };
+          }
+        }
+        
+        // 处理破釜沉舟的副作用
+        if (newBattle.playerBuffs?.desperateFirst) {
+          newBattle.playerBuffs = { 
+            ...newBattle.playerBuffs, 
+            desperateFirst: false
+          };
+          logs.push(`💀 破釜沉舟的副作用生效，攻击力下降50%！`);
+        }
+        
         const enemyDamage = Math.max(1, battle.enemy.attack - Math.floor(player.level * 0.5));
         newPlayer.hp = Math.max(0, newPlayer.hp - enemyDamage);
         logs.push(`${battle.enemy.name} 对你造成了 ${enemyDamage} 点伤害！`);
@@ -457,7 +540,10 @@ function gameReducer(state, action) {
       // 完成任务
       const activeTask = state.tasks.active;
       if (activeTask && state.battle?.enemy) {
-        if (activeTask.type === 'battle' || activeTask.target === state.battle.enemy.id) {
+        // battle类型任务：有target则检查敌人是否匹配，无target则任何战斗都完成
+        const shouldComplete = activeTask.type === 'battle' && 
+          (!activeTask.target || activeTask.target === state.battle.enemy.id);
+        if (shouldComplete) {
           const rewards = calculateTaskReward(activeTask, state.player.level);
           newState.player = {
             ...state.player,
@@ -502,27 +588,32 @@ function gameReducer(state, action) {
       
       // 完成任务
       const activeTask = state.tasks.active;
-      if (activeTask) {
-        const rewards = calculateTaskReward(activeTask, state.player.level);
-        newState.player = {
-          ...state.player,
-          gold: state.player.gold + rewards.gold,
-          items: {
-            ...state.player.items,
-            potion: (state.player.items.potion || 0) + (rewards.items.potion || 0)
-          }
-        };
-        newState.tasks = {
-          ...state.tasks,
-          active: null,
-          completed: [...state.tasks.completed, activeTask.id]
-        };
-        // 显示任务奖励弹窗
-        newState.taskReward = {
-          taskName: activeTask.name,
-          rewards: rewards
-        };
-        newState.screen = SCREENS.TASK_REWARD;
+      if (activeTask && state.battle?.enemy) {
+        // battle类型任务：有target则检查敌人是否匹配，无target则任何战斗都完成
+        const shouldComplete = activeTask.type === 'battle' && 
+          (!activeTask.target || activeTask.target === state.battle.enemy.id);
+        if (shouldComplete) {
+          const rewards = calculateTaskReward(activeTask, state.player.level);
+          newState.player = {
+            ...state.player,
+            gold: state.player.gold + rewards.gold,
+            items: {
+              ...state.player.items,
+              potion: (state.player.items.potion || 0) + (rewards.items.potion || 0)
+            }
+          };
+          newState.tasks = {
+            ...state.tasks,
+            active: null,
+            completed: [...state.tasks.completed, activeTask.id]
+          };
+          // 显示任务奖励弹窗
+          newState.taskReward = {
+            taskName: activeTask.name,
+            rewards: rewards
+          };
+          newState.screen = SCREENS.TASK_REWARD;
+        }
       }
       
       // 解锁下一个节点

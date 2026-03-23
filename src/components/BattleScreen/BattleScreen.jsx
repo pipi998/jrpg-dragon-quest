@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useGame } from '../../context/GameContext';
 import './BattleScreen.css';
 
 export default function BattleScreen() {
   const { state, dispatch } = useGame();
   const { battle, player } = state;
+  const [showSkillPanel, setShowSkillPanel] = useState(false);
   
   if (!battle) return null;
   
@@ -12,14 +13,25 @@ export default function BattleScreen() {
     dispatch({ type: 'BATTLE_ACTION', payload: { action } });
   };
   
+  const handleUseSkill = (skillId) => {
+    dispatch({ type: 'BATTLE_ACTION', payload: { action: 'use_skill', skillId } });
+    setShowSkillPanel(false);
+  };
+  
   const handleEndBattle = () => {
     dispatch({ type: 'END_BATTLE' });
   };
   
-  const { enemy, playerHp, turn, logs } = battle;
+  const { enemy, playerHp, turn, logs, skillUses } = battle;
   const isPlayerTurn = turn === 'player';
   const isDefeated = enemy.hp <= 0;
   const isDead = playerHp <= 0;
+  
+  // 获取技能剩余使用次数
+  const getSkillRemainingUses = (skillId) => {
+    const used = skillUses?.[skillId] || 0;
+    return 3 - used;
+  };
   
   return (
     <div className="battle-screen">
@@ -37,10 +49,10 @@ export default function BattleScreen() {
           <div className="enemy-hp">
             <div 
               className="hp-bar enemy-hp-bar"
-              style={{ width: `${Math.max(0, (enemy.hp / enemy.hp) * 100)}%` }}
+              style={{ width: `${Math.max(0, (enemy.hp / enemy.maxHp) * 100)}%` }}
             />
             <span className="hp-text">
-              {Math.max(0, enemy.hp)} / {enemy.hp}
+              {Math.max(0, enemy.hp)} / {enemy.maxHp}
             </span>
           </div>
           {enemy.isBoss && <div className="boss-label">BOSS</div>}
@@ -61,11 +73,18 @@ export default function BattleScreen() {
           </div>
           {player.skills.length > 0 && (
             <div className="player-skills">
-              {player.skills.map(skill => (
-                <span key={skill.id} className="skill-badge" title={skill.description}>
-                  {skill.emoji}
-                </span>
-              ))}
+              {player.skills.map(skill => {
+                const remaining = getSkillRemainingUses(skill.id);
+                return (
+                  <span 
+                    key={skill.id} 
+                    className={`skill-badge ${remaining === 0 ? 'skill-exhausted' : ''}`} 
+                    title={`${skill.name}: ${skill.description} (剩余 ${remaining}/3 次)`}
+                  >
+                    {skill.emoji}
+                  </span>
+                );
+              })}
             </div>
           )}
         </div>
@@ -78,8 +97,40 @@ export default function BattleScreen() {
         ))}
       </div>
       
+      {/* 技能面板 */}
+      {showSkillPanel && player.skills.length > 0 && (
+        <div className="skill-panel">
+          <div className="skill-panel-title">🎯 选择技能 (每场战斗限3次)</div>
+          <div className="skill-buttons">
+            {player.skills.map(skill => {
+              const remaining = getSkillRemainingUses(skill.id);
+              const isExhausted = remaining === 0;
+              return (
+                <button
+                  key={skill.id}
+                  className={`skill-btn ${isExhausted ? 'disabled' : ''}`}
+                  onClick={() => handleUseSkill(skill.id)}
+                  disabled={!isPlayerTurn || isExhausted}
+                  title={skill.description}
+                >
+                  <span className="skill-icon">{skill.emoji}</span>
+                  <span className="skill-name">{skill.name}</span>
+                  <span className="skill-uses">{remaining}/3</span>
+                </button>
+              );
+            })}
+          </div>
+          <button 
+            className="close-skill-panel"
+            onClick={() => setShowSkillPanel(false)}
+          >
+            关闭
+          </button>
+        </div>
+      )}
+      
       {/* 操作面板 */}
-      {!isDefeated && !isDead && !battle.escaped && (
+      {!isDefeated && !isDead && !battle.escaped && !showSkillPanel && (
         <div className="battle-actions">
           <button 
             className="action-btn attack"
@@ -103,6 +154,15 @@ export default function BattleScreen() {
           >
             🧪 药水 ({player.items.potion || 0})
           </button>
+          {player.skills.length > 0 && (
+            <button 
+              className="action-btn skill"
+              onClick={() => setShowSkillPanel(true)}
+              disabled={!isPlayerTurn}
+            >
+              ✨ 技能
+            </button>
+          )}
           <button 
             className="action-btn escape"
             onClick={() => handleAction('escape')}
